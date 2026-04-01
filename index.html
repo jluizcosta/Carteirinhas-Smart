@@ -133,7 +133,7 @@
     <div id="tela-pesquisa" class="container">
         <div class="logo">Smart Idiomas</div>
         <h1>Carteirinha estudantil digital</h1>
-        <p class="instrucao">Digite seu nome completo para acessar<br><small>Ex: João da Silva Sousa</small></p>
+        <p class="instrucao">Digite seu nome completo para acessar<br><small>Ex: João da Silva Sousa</small> <br> <small>Acentuação do nome necessária para acesso!</small></p>
         
         <input type="text" id="nomeInput" placeholder="Seu nome completo">
         <button class="btn-acessar" onclick="entrar()">Acessar Carteirinha</button>
@@ -165,28 +165,51 @@
 
     <script>
         function entrar() {
-            const nome = document.getElementById('nomeInput').value.trim();
-            if(!nome) return alert("Por favor, digite seu nome.");
+    const nome = document.getElementById('nomeInput').value.trim();
+    if(!nome) return alert("Por favor, digite seu nome.");
 
-            const nomeTratado = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-');
-            const caminho = `fotos/${nomeTratado}.png`;
+    const nomeOriginal = nome.toLowerCase();
 
-            const img = new Image();
-            img.src = caminho;
-            
-            img.onload = function() {
-                document.getElementById('displayNome').innerText = nome;
-                document.getElementById('imagemCarteirinha').src = caminho;
-                document.getElementById('downloadLink').href = caminho;
-                document.getElementById('tela-pesquisa').style.display = 'none';
-                document.getElementById('tela-carteirinha').style.display = 'block';
-                aplicar3D();
-            };
+    const nomeSemAcento = nomeOriginal
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
 
-            img.onerror = function() {
-                alert("Aluno não encontrado. Verifique a grafia.");
-            };
+    const caminhos = [
+        `fotos/${nomeOriginal}.png`, // com acento
+        `fotos/${nomeSemAcento}.png`, // sem acento
+        `fotos/${nomeOriginal.replace(/\s+/g, '-')}.png`, // com acento e hífen
+        `fotos/${nomeSemAcento.replace(/\s+/g, '-')}.png` // sem acento e hífen
+    ];
+
+    let index = 0;
+
+    function tentarCarregar() {
+        if (index >= caminhos.length) {
+            alert("Aluno não encontrado. Verifique a grafia.");
+            return;
         }
+
+        const caminho = caminhos[index];
+        const img = new Image();
+        img.src = caminho;
+
+        img.onload = function() {
+            document.getElementById('displayNome').innerText = nome;
+            document.getElementById('imagemCarteirinha').src = caminho;
+            document.getElementById('downloadLink').href = caminho;
+            document.getElementById('tela-pesquisa').style.display = 'none';
+            document.getElementById('tela-carteirinha').style.display = 'block';
+            aplicar3D();
+        };
+
+        img.onerror = function() {
+            index++;
+            tentarCarregar();
+        };
+    }
+
+    tentarCarregar();
+}
 
         function voltar() { location.reload(); }
 
